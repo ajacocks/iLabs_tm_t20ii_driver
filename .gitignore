@@ -1,0 +1,6 @@
+# build artifacts
+rastertozj
+build/
+ppd/
+*.o
+*.deb
