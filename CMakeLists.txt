@@ -1,4 +1,4 @@
-cmake_minimum_required ( VERSION 3.0 )
+cmake_minimum_required ( VERSION 3.10 )
 
 # set default build type to Release (if nothing else provided from outside yet)
 IF ( NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES )
