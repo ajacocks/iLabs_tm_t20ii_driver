@@ -231,7 +231,7 @@ void finishPage() {
 }
 
 // sent on job canceling
-void cancelJob() {
+void cancelJob(int iSignal) {
   int i = 0;
   for (; i < 0x258; ++i)
     mputchar(0);

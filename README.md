@@ -50,17 +50,14 @@ containing `*cupsModelNumber: 20`, which the current filter reads as a 20-pixel-
 Upstream uses CMake, which works fine. But it is a single C file, so plain gcc is enough:
 
 ```bash
-gcc -O2 -Wall -fPIC -o rastertozj rastertozj.c \
-    /usr/lib/x86_64-linux-gnu/libcups.so.2 \
-    /usr/lib/x86_64-linux-gnu/libcupsimage.so.2
+gcc -O2 -Wall -fPIC -o rastertozj rastertozj.c -lcups
 ```
 
-Requires the CUPS development headers (`libcups2-dev`, `libcupsimage2-dev`).
+Requires the CUPS development headers: `libcups2-dev` on Debian/Ubuntu, `libcups` on Arch.
 
-On CUPS 2.4 (Ubuntu 24.04) the raster API — `cupsRasterOpen`, `cupsRasterReadPixels` and
-friends — is merged into `libcups.so.2`, so the linker drops `libcupsimage` as unneeded. That
-is expected; verify with `nm -D --undefined-only rastertozj | grep -i raster` and a
-`LD_BIND_NOW=1` run.
+On CUPS 2.4 the raster API — `cupsRasterOpen`, `cupsRasterReadPixels` and friends — lives in
+`libcups.so.2`, so `-lcups` is all it needs. On older CUPS add `-lcupsimage`. Verify with
+`nm -D --undefined-only rastertozj | grep -i raster` and a `LD_BIND_NOW=1` run.
 
 The CMake route, if you prefer it:
 
