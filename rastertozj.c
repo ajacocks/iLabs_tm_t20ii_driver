@@ -1,11 +1,12 @@
 // To get required headers, run
 // sudo apt-get install libcups2-dev libcupsimage2-dev
 #include <cups/cups.h>
-#include <cups/ppd.h>
 #include <cups/raster.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifndef DEBUGFILE
 #define DEBUGFILE "/tmp/debugraster.txt"
@@ -33,12 +34,30 @@ struct settings_ {
 };
 struct settings_ settings;
 
+// read *cupsModelNumber straight from the PPD; the libcups PPD API is deprecated.
+// returns 0 if the PPD or the keyword is missing.
+static int readModelNumber(const char *sPpdPath) {
+  static const char sKey[] = "*cupsModelNumber:";
+  char sLine[256];
+  int iModel = 0;
+  FILE *pPpd;
+
+  if (!sPpdPath || !(pPpd = fopen(sPpdPath, "r")))
+    return 0;
+  while (fgets(sLine, sizeof(sLine), pPpd)) {
+    if (!strncmp(sLine, sKey, sizeof(sKey) - 1)) {
+      iModel = atoi(sLine + sizeof(sKey) - 1);
+      break;
+    }
+  }
+  fclose(pPpd);
+  return iModel;
+}
+
 static void initializeSettings(char *commandLineOptionSettings, struct settings_ *pSettings) {
-  ppd_file_t *pPpd = ppdOpenFile(getenv("PPD"));
   // char* sDestination = getenv("DestinationPrinterID");
   memset(pSettings, 0, sizeof(struct settings_));
-  pSettings->modelNum = pPpd->model_number;
-  ppdClose(pPpd);
+  pSettings->modelNum = readModelNumber(getenv("PPD"));
 }
 
 static void update_settings_from_job (cups_page_header2_t * pHeader)
