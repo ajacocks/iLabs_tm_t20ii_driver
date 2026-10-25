@@ -335,6 +335,7 @@ void DebugPrintHeader (cups_page_header2_t* pHeader)
 // rearrange (compress) rows in pBuf, discarding tails of them
 static inline unsigned compress_buffer(unsigned char *pBuf, unsigned iSize,
                          unsigned int iWideStride, unsigned int iStride) {
+  const unsigned char *pStart = pBuf;
   const unsigned char *pEnd = pBuf + iSize;
   unsigned char *pTarget = pBuf;
   while (pBuf < pEnd) {
@@ -343,7 +344,7 @@ static inline unsigned compress_buffer(unsigned char *pBuf, unsigned iSize,
     pTarget += iBytes;
     pBuf += iWideStride;
   }
-  return min(iSize, pTarget - pBuf);
+  return pTarget - pStart;
 }
 
 // returns -1 if whole line iz filled by zeros. Otherwise 0.
@@ -429,6 +430,7 @@ int main(int argc, char *argv[]) {
   // CUPS Page tHeader
   cups_page_header2_t tHeader;
   unsigned char *pRasterBuf = NULL; // Pointer to raster data from CUPS
+  unsigned iRasterBufSize = 0;
   // Raster stream for printing
   cups_raster_t *pRasterSrc = cupsRasterOpen(fd, CUPS_RASTER_READ);
   initializeSettings(argv[5],&settings);
@@ -458,8 +460,11 @@ int main(int argc, char *argv[]) {
 
     DebugPrintHeader ( &tHeader );
 
-    if (!pRasterBuf) {
-      pRasterBuf = malloc(tHeader.cupsBytesPerLine * 24);
+    // pages may differ in width, so grow the buffer when a wider one comes
+    if (tHeader.cupsBytesPerLine * 24 > iRasterBufSize) {
+      free(pRasterBuf);
+      iRasterBufSize = tHeader.cupsBytesPerLine * 24;
+      pRasterBuf = malloc(iRasterBufSize);
       if (!pRasterBuf) // hope it never goes here...
         EXITPRINT(EXIT_FAILURE)
     }
